@@ -353,6 +353,7 @@
 -analyzer:"D:/Unity Versions/2022.3.39f1/Editor/Data/Tools/Unity.SourceGenerators/Unity.Properties.SourceGenerator.dll"
 -analyzer:"D:/Unity Versions/2022.3.39f1/Editor/Data/Tools/Unity.SourceGenerators/Unity.SourceGenerators.dll"
 "Assets/GhostCharacter_Free/Scripts/GhostScript.cs"
+"Assets/Scripts/BackgroundExpander.cs"
 "Assets/Scripts/CameraController.cs"
 "Assets/Scripts/CubeController.cs"
 "Assets/Scripts/LineSpawner.cs"

@@ -1,64 +1,84 @@
 using UnityEngine;
+using System.Collections.Generic;  // Necessário para usar Queue
 
 public class PlaneExpander : MonoBehaviour
 {
+    public GameObject floorPrefab;      // Prefab do chão (plano)
     public Transform player;            // Referência ao cubo que está se movendo
-    public float expandThreshold = 5f;  // Distância do cubo em relação ao fim do plano para expandir
-    public float expandAmount = 10f;    // Quanto expandir o plano quando o cubo se aproximar do final
-    public float destroyThreshold = 10f; // Distância do cubo em relação ao início do plano para destruir a parte de trás
-
-    private Vector3 initialScale;        // Armazena a escala inicial do plano
-    private float totalLength;           // Mantém o comprimento total do plano
+    public float expandThreshold = 100f;  // Aumenta o valor para gerar o chão antes
+    public float destroyThreshold = 300f; // Distância do cubo em relação ao início do plano para destruir a parte de trás
+    private float nextSpawnPositionX;   // Posição X onde o próximo tile será gerado à frente
+    private float previousSpawnPositionX; // Posição X onde o próximo tile será gerado atrás
+    private Queue<GameObject> spawnedTiles = new Queue<GameObject>();  // Fila para gerenciar os tiles gerados
 
     void Start()
     {
-        // Armazena a escala inicial do plano
-        initialScale = transform.localScale;
-        totalLength = initialScale.x;  // Definimos o comprimento inicial
+        // Inicializa as posições iniciais de tiles à frente e atrás do jogador
+        nextSpawnPositionX = transform.position.x;
+        previousSpawnPositionX = transform.position.x;
+
+        // Gera múltiplos tiles à frente do jogador no início
+        for (int i = 0; i < 5; i++)  // Ajuste o valor para gerar mais ou menos tiles inicialmente
+        {
+            ExpandPlaneForward();
+        }
+
+        // Gera múltiplos tiles atrás do jogador no início
+        for (int i = 0; i < 5; i++)  // Ajuste o valor para gerar mais ou menos tiles atrás
+        {
+            ExpandPlaneBackward();
+        }
     }
 
     void Update()
     {
-        // Verifica se o cubo está se aproximando do final do plano
-        if (player.position.x > transform.position.x + (transform.localScale.x * 5f) - expandThreshold)
+        // Verifica se o cubo está se aproximando do final do plano à frente
+        if (player.position.x > nextSpawnPositionX - expandThreshold)
         {
-            ExpandPlane();
+            ExpandPlaneForward();
         }
 
-        // Verifica se o cubo se afastou o suficiente para destruir a parte de trás do plano
-        if (player.position.x > transform.position.x + (destroyThreshold * 2))
+        // Verifica se o cubo se afastou o suficiente para destruir os tiles antigos
+        if (spawnedTiles.Count > 0 && player.position.x > spawnedTiles.Peek().transform.position.x + destroyThreshold)
         {
-            DestroyPlaneBack();
+            DestroyOldTile();
         }
     }
 
-    void ExpandPlane()
+    void ExpandPlaneForward()
     {
-        // Aumenta a escala do plano no eixo X para expandir o chão
-        transform.localScale = new Vector3(transform.localScale.x + expandAmount, transform.localScale.y, transform.localScale.z);
+        // Instancia um novo tile de chão à frente do último gerado, com Y = -28.54799 e Z = 0
+        GameObject newTile = Instantiate(floorPrefab, new Vector3(nextSpawnPositionX, -28.44799f, 0), Quaternion.identity);
 
-        // Reposiciona o plano para mantê-lo centralizado conforme ele cresce
-        transform.position = new Vector3(transform.position.x + (expandAmount / 2), transform.position.y, transform.position.z);
+        // Adiciona o tile à fila para controlar quais tiles já foram gerados
+        spawnedTiles.Enqueue(newTile);
 
-        // Atualiza o comprimento total do plano
-        totalLength += expandAmount;
+        // Calcula o tamanho real do prefab em unidades do mundo, para espaçamento correto
+        float tileRealLength = floorPrefab.GetComponent<Renderer>().bounds.size.x;
+
+        // Atualiza a posição X para o próximo tile ser gerado à frente
+        nextSpawnPositionX += tileRealLength;
     }
 
-    void DestroyPlaneBack()
+    void ExpandPlaneBackward()
     {
-        // Reduz a escala do plano no eixo X, "removendo" a parte de trás
-        transform.localScale = new Vector3(transform.localScale.x - expandAmount, transform.localScale.y, transform.localScale.z);
+        // Instancia um novo tile de chão atrás do último gerado, com Y = -28.54799 e Z = 0
+        GameObject newTile = Instantiate(floorPrefab, new Vector3(previousSpawnPositionX, -28.44799f, 0), Quaternion.identity);
 
-        // Move o plano para a frente para simular que a parte de trás foi removida
-        transform.position = new Vector3(transform.position.x + (expandAmount / 2), transform.position.y, transform.position.z);
+        // Adiciona o tile à fila para controlar quais tiles já foram gerados
+        spawnedTiles.Enqueue(newTile);
 
-        // Atualiza o comprimento total do plano
-        totalLength -= expandAmount;
+        // Calcula o tamanho real do prefab em unidades do mundo, para espaçamento correto
+        float tileRealLength = floorPrefab.GetComponent<Renderer>().bounds.size.x;
 
-        // Evita que o comprimento total fique menor que o comprimento original
-        if (totalLength < initialScale.x)
-        {
-            totalLength = initialScale.x;
-        }
+        // Atualiza a posição X para o próximo tile ser gerado atrás
+        previousSpawnPositionX -= tileRealLength; // Subtrai para gerar para trás
+    }
+
+    void DestroyOldTile()
+    {
+        // Remove o tile mais antigo da fila e o destrói
+        GameObject oldTile = spawnedTiles.Dequeue();
+        Destroy(oldTile);
     }
 }

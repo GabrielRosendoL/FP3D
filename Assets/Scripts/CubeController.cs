@@ -5,9 +5,9 @@ using UnityEngine.SceneManagement;
 
 public class CubeController : MonoBehaviour
 {
-    public float flyForce = 8f;
-    public float moveSpeed = 5f;
-    public float dashSpeed = 10f;
+    public float flyForce = 30f;
+    public float moveSpeed = 18f;
+    public float dashSpeed = 28f;
     private Rigidbody rb;
 
     // Referências para os elementos de Game Over na UI
@@ -24,6 +24,9 @@ public class CubeController : MonoBehaviour
         rb = GetComponent<Rigidbody>();
         rb.mass = 5f;
         rb.useGravity = true;
+
+        // Congela a rotação nos eixos X e Z para evitar que o cubo tombe para frente ou para os lados
+        rb.constraints = RigidbodyConstraints.FreezeRotationX | RigidbodyConstraints.FreezeRotationZ;
 
         gameOverText.gameObject.SetActive(false);
         restartButton.gameObject.SetActive(false);
