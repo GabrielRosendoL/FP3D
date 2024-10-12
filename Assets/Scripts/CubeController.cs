@@ -19,6 +19,8 @@ public class CubeController : MonoBehaviour
     // Sistema de pontuação
     private int score = 0;  // Pontuação começa em 0
 
+    private Vector3 savedVelocity; // Salva a velocidade ao pausar
+
     void Start()
     {
         rb = GetComponent<Rigidbody>();
@@ -36,7 +38,7 @@ public class CubeController : MonoBehaviour
 
     void Update()
     {
-        if (isGameOver) return;
+        if (isGameOver || Time.timeScale == 0f) return; // Adiciona verificação para pausa
 
         MoveRight();
         rb.AddForce(Vector3.down * 70f);
@@ -94,5 +96,18 @@ public class CubeController : MonoBehaviour
         {
             AddScore();
         }
+    }
+
+    // Salvar e restaurar a velocidade ao pausar e retomar o jogo
+    public void PauseGame()
+    {
+        savedVelocity = rb.velocity; // Salva a velocidade atual ao pausar
+        rb.isKinematic = true; // Desativa a física enquanto pausado
+    }
+
+    public void ResumeGame()
+    {
+        rb.isKinematic = false; // Reativa a física
+        rb.velocity = savedVelocity; // Restaura a velocidade ao retomar o jogo
     }
 }

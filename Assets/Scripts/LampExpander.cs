@@ -9,7 +9,7 @@ public class LampExpander : MonoBehaviour
     public float expandThreshold = 100f; 
     public float destroyThreshold = 300f; 
     public float spacing = 60f; // Novo: variável para definir o espaçamento entre as lamps
-    public float startDelay = 2f; // Novo: variável para definir o atraso antes de começar a gerar as lamps
+    public float startDelay = 0f; // Novo: variável para definir o atraso antes de começar a gerar as lamps
     public float initialDistance = 100f; // Distância inicial longe do jogador para gerar os tiles
 
     private float nextSpawnPositionX; 
