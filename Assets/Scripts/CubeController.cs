@@ -7,8 +7,8 @@ using System.Collections;
 public class CubeController : MonoBehaviour
 {
     public float flyForce = 30f;
-    public float moveSpeed = 18f;
-    public float dashSpeed = 28f;
+    public float moveSpeed = 40f;
+    public float dashSpeed = 70f;
     private Rigidbody rb;
 
     // Referências para o painel de Game Over e os elementos da UI
