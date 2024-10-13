@@ -75,7 +75,7 @@ public class CubeController : MonoBehaviour
         if (isGameOver || Time.timeScale == 0f) return; // Adiciona verificação para pausa
 
         MoveRight();
-        rb.AddForce(Vector3.down * 140f); // Força da Gravidade
+        rb.AddForce(Vector3.down * 250f); // Força da Gravidade
 
         if (Input.GetKeyDown(KeyCode.Space))
         {
