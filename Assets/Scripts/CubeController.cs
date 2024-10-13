@@ -16,6 +16,8 @@ public class CubeController : MonoBehaviour
     public TextMeshProUGUI gameOverText;  // Texto de Game Over
     public Button restartButton;  // Botão de reiniciar
     public TextMeshProUGUI scoreText;  // Texto da pontuação final
+    public TextMeshProUGUI scoreTextInGame;  // Texto da pontuação final
+
     public AudioClip gameOverSound;  // Som de Game Over
     public GameObject tutorialPanel;  // Painel de Tutorial
     public TextMeshProUGUI countdownText;  // Texto da contagem regressiva
@@ -32,43 +34,42 @@ public class CubeController : MonoBehaviour
     private Color originalColor;
     private bool isDashing = false;  // Flag para saber se o dash está ativo
 
-    void Start()
+   void Start()
+{
+    rb = GetComponent<Rigidbody>();
+    audioSource = GetComponent<AudioSource>();
+
+    rb.mass = 5f;
+    rb.useGravity = true;
+
+    rb.constraints = RigidbodyConstraints.FreezeRotationX | RigidbodyConstraints.FreezeRotationZ;
+
+    gameOverPanel.SetActive(false);
+    pauseMenu.SetActive(false);
+    countdownText.gameObject.SetActive(false);
+    
+    // Certifique-se de que o texto da pontuação esteja visível
+    scoreText.text = "Score: " + score;
+    
+    restartButton.onClick.AddListener(RestartGame);
+
+    characterRenderers = GetComponentsInChildren<Renderer>();
+
+    if (characterRenderers.Length > 0)
     {
-        rb = GetComponent<Rigidbody>();
-        audioSource = GetComponent<AudioSource>();
-
-        rb.mass = 5f;
-        rb.useGravity = true;
-
-        // Congela a rotação nos eixos X e Z para evitar que o cubo tombe para frente ou para os lados
-        rb.constraints = RigidbodyConstraints.FreezeRotationX | RigidbodyConstraints.FreezeRotationZ;
-
-        // Esconder o painel de Game Over e Pause Menu inicialmente
-        gameOverPanel.SetActive(false);
-        pauseMenu.SetActive(false);
-        countdownText.gameObject.SetActive(false);  // Esconder o texto da contagem no início
-
-        restartButton.onClick.AddListener(RestartGame);
-
-        // Encontrar todos os Renderers nos sub-objetos do personagem
-        characterRenderers = GetComponentsInChildren<Renderer>();
-
-        // Salvar a cor original
-        if (characterRenderers.Length > 0)
-        {
-            originalColor = characterRenderers[0].material.color;
-        }
-
-        // Verifica se o jogo está sendo reiniciado e pula o tutorial
-        if (PlayerPrefs.GetInt("IsRestarting", 0) == 1)
-        {
-            StartGameWithoutTutorial();
-        }
-        else
-        {
-            ShowTutorialPanel();
-        }
+        originalColor = characterRenderers[0].material.color;
     }
+
+    if (PlayerPrefs.GetInt("IsRestarting", 0) == 1)
+    {
+        StartGameWithoutTutorial();
+    }
+    else
+    {
+        ShowTutorialPanel();
+    }
+}
+
 
     void Update()
     {
@@ -174,10 +175,13 @@ public class CubeController : MonoBehaviour
     }
 
     // Método para incrementar a pontuação
-    public void AddScore()
-    {
-        score++;
-    }
+    // Método para incrementar a pontuação
+public void AddScore()
+{
+    score++;  // Incrementa a pontuação
+    scoreTextInGame.text = "Pontuação: " + score;  // Atualiza o texto da pontuação em tempo real
+}
+
 
     // Detecta quando o cubo passa pela linha (trigger)
     private void OnTriggerEnter(Collider other)
