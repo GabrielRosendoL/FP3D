@@ -11,26 +11,24 @@ public class CubeController : MonoBehaviour
     public float dashSpeed = 28f;
     private Rigidbody rb;
 
-    // Referências para os elementos de Game Over na UI
-    public TextMeshProUGUI gameOverText;
-    public Button restartButton;
+    // Referências para o painel de Game Over e os elementos da UI
+    public GameObject gameOverPanel;  // Painel de Game Over
+    public TextMeshProUGUI gameOverText;  // Texto de Game Over
+    public Button restartButton;  // Botão de reiniciar
+    public TextMeshProUGUI scoreText;  // Texto da pontuação final
+    public AudioClip gameOverSound;  // Som de Game Over
+    public GameObject tutorialPanel;  // Painel de Tutorial
+    public TextMeshProUGUI countdownText;  // Texto da contagem regressiva
 
     private bool isGameOver = false;
-
-    // Sistema de pontuação
     private int score = 0;  // Pontuação começa em 0
-
-    private Vector3 savedVelocity; // Salva a velocidade ao pausar
-
-    // Áudio
-    public AudioClip jumpSound;  // Som do pulo
-    public AudioClip dashSound;  // Som do dash
+    private Vector3 savedVelocity;  // Salva a velocidade ao pausar
     private AudioSource audioSource;
 
     // Renderer(s) do personagem
     private Renderer[] characterRenderers;  // Para armazenar todos os renderers
-
     private Color originalColor;
+    private bool isDashing = false;  // Flag para saber se o dash está ativo
 
     void Start()
     {
@@ -43,8 +41,9 @@ public class CubeController : MonoBehaviour
         // Congela a rotação nos eixos X e Z para evitar que o cubo tombe para frente ou para os lados
         rb.constraints = RigidbodyConstraints.FreezeRotationX | RigidbodyConstraints.FreezeRotationZ;
 
-        gameOverText.gameObject.SetActive(false);
-        restartButton.gameObject.SetActive(false);
+        // Esconder o painel de Game Over inicialmente
+        gameOverPanel.SetActive(false);
+        countdownText.gameObject.SetActive(false);  // Esconder o texto da contagem no início
 
         restartButton.onClick.AddListener(RestartGame);
 
@@ -55,6 +54,16 @@ public class CubeController : MonoBehaviour
         if (characterRenderers.Length > 0)
         {
             originalColor = characterRenderers[0].material.color;
+        }
+
+        // Verifica se o jogo está sendo reiniciado e pula o tutorial
+        if (PlayerPrefs.GetInt("IsRestarting", 0) == 1)
+        {
+            StartGameWithoutTutorial();
+        }
+        else
+        {
+            ShowTutorialPanel();
         }
     }
 
@@ -74,6 +83,11 @@ public class CubeController : MonoBehaviour
         {
             StartDash();
         }
+
+        if (Input.GetKeyUp(KeyCode.Z))
+        {
+            StopDash();
+        }
     }
 
     void MoveRight()
@@ -85,19 +99,27 @@ public class CubeController : MonoBehaviour
     void Fly()
     {
         rb.velocity = new Vector3(rb.velocity.x, flyForce, 0);
-        PlaySound(jumpSound);  // Toca o som de pulo
     }
 
     void StartDash()
     {
         rb.velocity = new Vector3(dashSpeed, rb.velocity.y, 0);
-        PlaySound(dashSound);  // Toca o som de dash
-        StartCoroutine(ChangeColorDuringDash());
+        isDashing = true;  // Ativar o dash
+        StartCoroutine(ChangeColorDuringDash());  // Começar a mudar as cores
+    }
+
+    void StopDash()
+    {
+        isDashing = false;  // Parar o dash
+        StopAllCoroutines();  // Parar a corrotina de mudar as cores
+        ResetColor();  // Voltar à cor original
     }
 
     private void OnCollisionEnter(Collision collision)
     {
-        if (collision.gameObject.CompareTag("Ground") || collision.gameObject.CompareTag("Obstacle") || collision.gameObject.CompareTag("Teto"))
+        if (collision.gameObject.CompareTag("Ground") || 
+            collision.gameObject.CompareTag("Obstacle") || 
+            collision.gameObject.CompareTag("Teto"))
         {
             GameOver();
         }
@@ -106,13 +128,27 @@ public class CubeController : MonoBehaviour
     void GameOver()
     {
         isGameOver = true;
-        gameOverText.gameObject.SetActive(true);
-        restartButton.gameObject.SetActive(true);
-        Debug.Log("Game Over!");
+
+        // Exibir o painel de Game Over
+        gameOverPanel.SetActive(true);
+
+        // Atualizar a pontuação no painel
+        scoreText.text = "Score: " + score;
+
+        // Tocar o som de Game Over
+        if (gameOverSound != null && audioSource != null)
+        {
+            audioSource.PlayOneShot(gameOverSound);
+        }
     }
 
     void RestartGame()
     {
+        // Salva um valor para indicar que o jogo está sendo reiniciado
+        PlayerPrefs.SetInt("IsRestarting", 1);
+        PlayerPrefs.Save();
+
+        // Reinicia a cena
         score = 0;  // Zera a pontuação ao reiniciar
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
     }
@@ -121,7 +157,6 @@ public class CubeController : MonoBehaviour
     public void AddScore()
     {
         score++;
-        Debug.Log("Pontuação: " + score);  // Exibe a pontuação no console
     }
 
     // Detecta quando o cubo passa pela linha (trigger)
@@ -146,30 +181,68 @@ public class CubeController : MonoBehaviour
         rb.velocity = savedVelocity; // Restaura a velocidade ao retomar o jogo
     }
 
-    // Método para tocar sons
-    void PlaySound(AudioClip clip)
+    // Método para resetar a cor original
+    void ResetColor()
     {
-        if (audioSource != null && clip != null)
+        foreach (Renderer renderer in characterRenderers)
         {
-            audioSource.PlayOneShot(clip);
+            renderer.material.color = originalColor;  // Voltar à cor original
         }
     }
 
     // Corrotina para mudar a cor durante o dash
     IEnumerator ChangeColorDuringDash()
     {
-        // Mudar a cor de todos os renderers do personagem
-        foreach (Renderer renderer in characterRenderers)
+        while (isDashing)  // Continuar enquanto o dash estiver ativo
         {
-            renderer.material.color = Color.red;  // Muda a cor para vermelho durante o dash
+            // Gerar uma cor aleatória
+            Color randomColor = new Color(Random.value, Random.value, Random.value);
+
+            // Aplicar a cor a todos os renderers
+            foreach (Renderer renderer in characterRenderers)
+            {
+                renderer.material.color = randomColor;
+            }
+
+            yield return new WaitForSeconds(0.1f);  // Mudar de cor a cada 0.1 segundos
+        }
+    }
+
+    // Método para iniciar o jogo sem o tutorial
+    void StartGameWithoutTutorial()
+    {
+        // Zera a flag de reinício
+        PlayerPrefs.SetInt("IsRestarting", 0);
+        PlayerPrefs.Save();
+
+        // Esconder o tutorial e iniciar a contagem regressiva
+        tutorialPanel.SetActive(false);
+        StartCoroutine(StartCountdown());
+    }
+
+    // Método para mostrar o painel de tutorial
+    void ShowTutorialPanel()
+    {
+        // Mostrar o painel de tutorial
+        tutorialPanel.SetActive(true);
+    }
+
+    // Corrotina de contagem regressiva
+    IEnumerator StartCountdown()
+    {
+        tutorialPanel.SetActive(false);  // Esconder o painel de tutorial
+        countdownText.gameObject.SetActive(true);  // Ativar o texto de contagem regressiva
+
+        for (int i = 3; i > 0; i--)
+        {
+            countdownText.text = i.ToString();  // Mostrar a contagem regressiva
+            yield return new WaitForSecondsRealtime(1f);  // Esperar 1 segundo em tempo real
         }
 
-        yield return new WaitForSeconds(0.5f);  // Duração do dash
+        countdownText.text = "GO!";  // Mostrar "GO!" no final
+        yield return new WaitForSecondsRealtime(1f);  // Esperar um segundo antes de começar o jogo
 
-        // Voltar à cor original
-        foreach (Renderer renderer in characterRenderers)
-        {
-            renderer.material.color = originalColor;
-        }
+        countdownText.gameObject.SetActive(false);  // Esconder o texto da contagem regressiva
+        Time.timeScale = 1;  // Começar o jogo
     }
 }
