@@ -6,7 +6,7 @@ using System.Collections;
 
 public class CubeController : MonoBehaviour
 {
-    public float flyForce = 30f;
+    public float flyForce = 40f;
     public float moveSpeed = 40f;
     public float dashSpeed = 70f;
     private Rigidbody rb;
@@ -71,40 +71,51 @@ public class CubeController : MonoBehaviour
     }
 
     void Update()
+{
+    // Se o jogo acabou ou se o jogo estiver pausado, verifica se é necessário reiniciar
+    if (isGameOver)
     {
-        if (isGameOver || Time.timeScale == 0f) return; // Adiciona verificação para pausa
-
-        MoveRight();
-        rb.AddForce(Vector3.down * 250f); // Força da Gravidade
-
         if (Input.GetKeyDown(KeyCode.Space))
         {
-            Fly();
+            RestartGame();  // Pressionar a barra de espaço no painel de Game Over reinicia o jogo
         }
+        return;  // Não continua processando o restante das ações quando o jogo acabou
+    }
 
-        if (Input.GetKeyDown(KeyCode.Z))
+    if (Time.timeScale == 0f) return; // Adiciona verificação para pausa
+
+    MoveRight();
+    rb.AddForce(Vector3.down * 450f); // Força da Gravidade
+
+    if (Input.GetKeyDown(KeyCode.Space))
+    {
+        Fly();  // Se o jogo não acabou, a barra de espaço faz o cubo voar
+    }
+
+    if (Input.GetKeyDown(KeyCode.Z))
+    {
+        StartDash();
+    }
+
+    if (Input.GetKeyUp(KeyCode.Z))
+    {
+        StopDash();
+    }
+
+    // Toggle do menu de pausa com a tecla "Escape"
+    if (Input.GetKeyDown(KeyCode.Escape))
+    {
+        if (!isPaused)
         {
-            StartDash();
+            PauseGame();
         }
-
-        if (Input.GetKeyUp(KeyCode.Z))
+        else
         {
-            StopDash();
-        }
-
-        // Toggle do menu de pausa com a tecla "Escape"
-        if (Input.GetKeyDown(KeyCode.Escape))
-        {
-            if (!isPaused)
-            {
-                PauseGame();
-            }
-            else
-            {
-                ResumeGame();
-            }
+            ResumeGame();
         }
     }
+}
+
 
     void MoveRight()
     {
@@ -147,22 +158,25 @@ public class CubeController : MonoBehaviour
 }
 
 
-    void GameOver()
+  void GameOver()
+{
+    isGameOver = true;
+
+    // Exibir o painel de Game Over
+    gameOverPanel.SetActive(true);
+
+    // Atualizar a pontuação no painel
+    scoreText.text = "SCORE: " + score;
+
+    // Tocar o som de Game Over
+    if (gameOverSound != null && audioSource != null)
     {
-        isGameOver = true;
-
-        // Exibir o painel de Game Over
-        gameOverPanel.SetActive(true);
-
-        // Atualizar a pontuação no painel
-        scoreText.text = "SCORE: " + score;
-
-        // Tocar o som de Game Over
-        if (gameOverSound != null && audioSource != null)
-        {
-            audioSource.PlayOneShot(gameOverSound);
-        }
+        audioSource.PlayOneShot(gameOverSound);
     }
+
+    // Congelar o jogo ao dar Game Over
+    Time.timeScale = 0f;
+}
 
     void RestartGame()
     {

@@ -5,7 +5,7 @@ public class ObstacleSpawner : MonoBehaviour
 {
     public GameObject obstaclePrefab;   // Prefab dos obstáculos
     public Transform player;            // Referência ao cubo (personagem)
-    public float obstacleSpawnDistance = 20f; // Distância entre cada obstáculo gerado
+    public float obstacleSpawnDistance = 25f; // Distância entre cada obstáculo gerado
     public float minYPosition = -6f;    // Posição mínima no eixo Y
     public float maxYPosition = 2f;     // Posição máxima no eixo Y
     public int initialObstacles = 10;    // Quantidade de obstáculos gerados previamente
