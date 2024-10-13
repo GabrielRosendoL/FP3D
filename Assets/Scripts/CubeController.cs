@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using UnityEngine.SceneManagement;
+using System.Collections;
 
 public class CubeController : MonoBehaviour
 {
@@ -21,9 +22,21 @@ public class CubeController : MonoBehaviour
 
     private Vector3 savedVelocity; // Salva a velocidade ao pausar
 
+    // Áudio
+    public AudioClip jumpSound;  // Som do pulo
+    public AudioClip dashSound;  // Som do dash
+    private AudioSource audioSource;
+
+    // Renderer(s) do personagem
+    private Renderer[] characterRenderers;  // Para armazenar todos os renderers
+
+    private Color originalColor;
+
     void Start()
     {
         rb = GetComponent<Rigidbody>();
+        audioSource = GetComponent<AudioSource>();
+
         rb.mass = 5f;
         rb.useGravity = true;
 
@@ -34,6 +47,15 @@ public class CubeController : MonoBehaviour
         restartButton.gameObject.SetActive(false);
 
         restartButton.onClick.AddListener(RestartGame);
+
+        // Encontrar todos os Renderers nos sub-objetos do personagem
+        characterRenderers = GetComponentsInChildren<Renderer>();
+
+        // Salvar a cor original
+        if (characterRenderers.Length > 0)
+        {
+            originalColor = characterRenderers[0].material.color;
+        }
     }
 
     void Update()
@@ -47,6 +69,11 @@ public class CubeController : MonoBehaviour
         {
             Fly();
         }
+
+        if (Input.GetKeyDown(KeyCode.Z))
+        {
+            StartDash();
+        }
     }
 
     void MoveRight()
@@ -58,6 +85,14 @@ public class CubeController : MonoBehaviour
     void Fly()
     {
         rb.velocity = new Vector3(rb.velocity.x, flyForce, 0);
+        PlaySound(jumpSound);  // Toca o som de pulo
+    }
+
+    void StartDash()
+    {
+        rb.velocity = new Vector3(dashSpeed, rb.velocity.y, 0);
+        PlaySound(dashSound);  // Toca o som de dash
+        StartCoroutine(ChangeColorDuringDash());
     }
 
     private void OnCollisionEnter(Collision collision)
@@ -109,5 +144,32 @@ public class CubeController : MonoBehaviour
     {
         rb.isKinematic = false; // Reativa a física
         rb.velocity = savedVelocity; // Restaura a velocidade ao retomar o jogo
+    }
+
+    // Método para tocar sons
+    void PlaySound(AudioClip clip)
+    {
+        if (audioSource != null && clip != null)
+        {
+            audioSource.PlayOneShot(clip);
+        }
+    }
+
+    // Corrotina para mudar a cor durante o dash
+    IEnumerator ChangeColorDuringDash()
+    {
+        // Mudar a cor de todos os renderers do personagem
+        foreach (Renderer renderer in characterRenderers)
+        {
+            renderer.material.color = Color.red;  // Muda a cor para vermelho durante o dash
+        }
+
+        yield return new WaitForSeconds(0.5f);  // Duração do dash
+
+        // Voltar à cor original
+        foreach (Renderer renderer in characterRenderers)
+        {
+            renderer.material.color = originalColor;
+        }
     }
 }

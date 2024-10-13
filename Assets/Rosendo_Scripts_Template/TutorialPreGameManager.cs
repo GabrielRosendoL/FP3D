@@ -45,10 +45,17 @@ public class TutorialPreGameManager : MonoBehaviour
 
         while (countdown > 0)
         {
-            countdownText.text = Mathf.Ceil(countdown).ToString(); // Mostra o número inteiro mais próximo
-            yield return new WaitForSecondsRealtime(1f); // Usa tempo real para contagem regressiva, ignorando o Time.timeScale
+            // Mostrar a contagem regressiva com valores inteiros
+            countdownText.text = Mathf.Ceil(countdown).ToString();
+            yield return new WaitForSecondsRealtime(1f); // Usa tempo real para contagem regressiva
             countdown--;
         }
+
+        // Após a contagem regressiva, mostrar "GO!"
+        countdownText.text = "GO!";
+
+        // Esperar 1 segundo antes de iniciar o jogo
+        yield return new WaitForSecondsRealtime(1f);
 
         // Esconder o texto da contagem regressiva
         countdownText.gameObject.SetActive(false);

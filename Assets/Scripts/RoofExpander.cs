@@ -6,7 +6,7 @@ public class RoofExpander : MonoBehaviour
     public GameObject roofPrefab;      // Prefab do chão (roof)
     public Transform player;            // Referência ao cubo que está se movendo
     public float expandThreshold = 100f;  // Aumenta o valor para gerar o chão antes
-    public float destroyThreshold = 300f; // Distância do cubo em relação ao início do plano para destruir a parte de trás
+    public float destroyThreshold = 600f; // Distância do cubo em relação ao início do plano para destruir a parte de trás
     private float nextSpawnPositionX;   // Posição X onde o próximo tile será gerado à frente
     private float previousSpawnPositionX; // Posição X onde o próximo tile será gerado atrás
     private Queue<GameObject> spawnedTiles = new Queue<GameObject>();  // Fila para gerenciar os tiles gerados
