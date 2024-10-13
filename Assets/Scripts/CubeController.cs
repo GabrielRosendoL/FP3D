@@ -35,40 +35,40 @@ public class CubeController : MonoBehaviour
     private bool isDashing = false;  // Flag para saber se o dash está ativo
 
     void Start()
+{
+    Physics.gravity = new Vector3(0, -30f, 0);  // Define a gravidade global
+    rb = GetComponent<Rigidbody>();
+    audioSource = GetComponent<AudioSource>();
+
+    rb.mass = 5f;
+    rb.useGravity = true;
+    rb.constraints = RigidbodyConstraints.FreezeRotationX | RigidbodyConstraints.FreezeRotationZ;
+
+    gameOverPanel.SetActive(false);
+    pauseMenu.SetActive(false);
+    countdownText.gameObject.SetActive(false);
+
+    scoreText.text = "SCORE: " + score;
+
+    restartButton.onClick.AddListener(RestartGame);
+
+    characterRenderers = GetComponentsInChildren<Renderer>();
+
+    if (characterRenderers.Length > 0)
     {
-        rb = GetComponent<Rigidbody>();
-        audioSource = GetComponent<AudioSource>();
-
-        rb.mass = 5f;
-        rb.useGravity = true;
-
-        rb.constraints = RigidbodyConstraints.FreezeRotationX | RigidbodyConstraints.FreezeRotationZ;
-
-        gameOverPanel.SetActive(false);
-        pauseMenu.SetActive(false);
-        countdownText.gameObject.SetActive(false);
-
-        // Certifique-se de que o texto da pontuação esteja visível
-        scoreText.text = "SCORE: " + score;
-
-        restartButton.onClick.AddListener(RestartGame);
-
-        characterRenderers = GetComponentsInChildren<Renderer>();
-
-        if (characterRenderers.Length > 0)
-        {
-            originalColor = characterRenderers[0].material.color;
-        }
-
-        if (PlayerPrefs.GetInt("IsRestarting", 0) == 1)
-        {
-            StartGameWithoutTutorial();
-        }
-        else
-        {
-            ShowTutorialPanel();
-        }
+        originalColor = characterRenderers[0].material.color;
     }
+
+    if (PlayerPrefs.GetInt("IsRestarting", 0) == 1)
+    {
+        StartGameWithoutTutorial();
+    }
+    else
+    {
+        ShowTutorialPanel();
+    }
+}
+
 
     void Update()
 {
