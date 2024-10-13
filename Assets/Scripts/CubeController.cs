@@ -34,42 +34,41 @@ public class CubeController : MonoBehaviour
     private Color originalColor;
     private bool isDashing = false;  // Flag para saber se o dash está ativo
 
-   void Start()
-{
-    rb = GetComponent<Rigidbody>();
-    audioSource = GetComponent<AudioSource>();
-
-    rb.mass = 5f;
-    rb.useGravity = true;
-
-    rb.constraints = RigidbodyConstraints.FreezeRotationX | RigidbodyConstraints.FreezeRotationZ;
-
-    gameOverPanel.SetActive(false);
-    pauseMenu.SetActive(false);
-    countdownText.gameObject.SetActive(false);
-    
-    // Certifique-se de que o texto da pontuação esteja visível
-    scoreText.text = "PONTUAÇÃO: " + score;
-    
-    restartButton.onClick.AddListener(RestartGame);
-
-    characterRenderers = GetComponentsInChildren<Renderer>();
-
-    if (characterRenderers.Length > 0)
+    void Start()
     {
-        originalColor = characterRenderers[0].material.color;
-    }
+        rb = GetComponent<Rigidbody>();
+        audioSource = GetComponent<AudioSource>();
 
-    if (PlayerPrefs.GetInt("IsRestarting", 0) == 1)
-    {
-        StartGameWithoutTutorial();
-    }
-    else
-    {
-        ShowTutorialPanel();
-    }
-}
+        rb.mass = 5f;
+        rb.useGravity = true;
 
+        rb.constraints = RigidbodyConstraints.FreezeRotationX | RigidbodyConstraints.FreezeRotationZ;
+
+        gameOverPanel.SetActive(false);
+        pauseMenu.SetActive(false);
+        countdownText.gameObject.SetActive(false);
+
+        // Certifique-se de que o texto da pontuação esteja visível
+        scoreText.text = "PONTUAÇÃO: " + score;
+
+        restartButton.onClick.AddListener(RestartGame);
+
+        characterRenderers = GetComponentsInChildren<Renderer>();
+
+        if (characterRenderers.Length > 0)
+        {
+            originalColor = characterRenderers[0].material.color;
+        }
+
+        if (PlayerPrefs.GetInt("IsRestarting", 0) == 1)
+        {
+            StartGameWithoutTutorial();
+        }
+        else
+        {
+            ShowTutorialPanel();
+        }
+    }
 
     void Update()
     {
@@ -126,13 +125,13 @@ public class CubeController : MonoBehaviour
     {
         rb.velocity = new Vector3(dashSpeed, rb.velocity.y, 0);
         isDashing = true;  // Ativar o dash
-        StartCoroutine(ChangeColorDuringDash());  // Começar a mudar as cores
+        StartCoroutine(GlowDuringDash());  // Iniciar o brilho branco
     }
 
     void StopDash()
     {
         isDashing = false;  // Parar o dash
-        StopAllCoroutines();  // Parar a corrotina de mudar as cores
+        StopAllCoroutines();  // Parar a corrotina de brilho
         ResetColor();  // Voltar à cor original
     }
 
@@ -175,13 +174,11 @@ public class CubeController : MonoBehaviour
     }
 
     // Método para incrementar a pontuação
-    // Método para incrementar a pontuação
-public void AddScore()
-{
-    score++;  // Incrementa a pontuação
-    scoreTextInGame.text = "PONTUAÇÃO: " + score;  // Atualiza o texto da pontuação em tempo real
-}
-
+    public void AddScore()
+    {
+        score++;  // Incrementa a pontuação
+        scoreTextInGame.text = "PONTUAÇÃO: " + score;  // Atualiza o texto da pontuação em tempo real
+    }
 
     // Detecta quando o cubo passa pela linha (trigger)
     private void OnTriggerEnter(Collider other)
@@ -205,45 +202,57 @@ public void AddScore()
         countdownText.gameObject.SetActive(false);
     }
 
-public void ResumeGame()
-{
-    rb.isKinematic = false; // Reativa a física
-    rb.velocity = savedVelocity; // Restaura a velocidade ao retomar o jogo
-    pauseMenu.SetActive(false);  // Desativar o painel de pausa
-    isPaused = false;
+    public void ResumeGame()
+    {
+        rb.isKinematic = false; // Reativa a física
+        rb.velocity = savedVelocity; // Restaura a velocidade ao retomar o jogo
+        pauseMenu.SetActive(false);  // Desativar o painel de pausa
+        isPaused = false;
 
-    // Iniciar a contagem regressiva após retomar o jogo
-    StartCoroutine(StartCountdown());
-}
+        // Iniciar a contagem regressiva após retomar o jogo
+        StartCoroutine(StartCountdown());
+    }
 
-
-
-    // Método para resetar a cor original
+    // Método para resetar a cor original e remover emissão
     void ResetColor()
     {
         foreach (Renderer renderer in characterRenderers)
         {
-            renderer.material.color = originalColor;  // Voltar à cor original
+            renderer.material.DisableKeyword("_EMISSION");  // Desativar a emissão
+            renderer.material.SetColor("_EmissionColor", Color.black);  // Zerar a emissão
         }
     }
 
-    // Corrotina para mudar a cor durante o dash
-    IEnumerator ChangeColorDuringDash()
+    // Corrotina para fazer o personagem emitir um brilho branco durante o dash
+    // Corrotina para fazer o personagem piscar com brilho branco durante o dash
+IEnumerator GlowDuringDash()
+{
+    while (isDashing)
     {
-        while (isDashing)  // Continuar enquanto o dash estiver ativo
+        foreach (Renderer renderer in characterRenderers)
         {
-            // Gerar uma cor aleatória
-            Color randomColor = new Color(Random.value, Random.value, Random.value);
-
-            // Aplicar a cor a todos os renderers
-            foreach (Renderer renderer in characterRenderers)
-            {
-                renderer.material.color = randomColor;
-            }
-
-            yield return new WaitForSeconds(0.1f);  // Mudar de cor a cada 0.1 segundos
+            // Ativar o brilho branco
+            renderer.material.EnableKeyword("_EMISSION");
+            Color emissionColor = Color.white * Mathf.LinearToGammaSpace(1.5f);
+            renderer.material.SetColor("_EmissionColor", emissionColor);
         }
+
+        yield return new WaitForSeconds(0.1f);  // Manter o brilho por 0.2 segundos
+
+        foreach (Renderer renderer in characterRenderers)
+        {
+            // Desativar o brilho
+            renderer.material.DisableKeyword("_EMISSION");
+            renderer.material.SetColor("_EmissionColor", Color.black);
+        }
+
+        yield return new WaitForSeconds(0.1f);  // Sem brilho por 0.2 segundos
     }
+
+    // Quando o dash acabar, garantir que a emissão será removida
+    ResetColor();
+}
+
 
     // Método para iniciar o jogo sem o tutorial
     void StartGameWithoutTutorial()
@@ -264,33 +273,32 @@ public void ResumeGame()
         tutorialPanel.SetActive(true);
     }
 
-    // Corrotina de contagem regressiva
+    // Corrotina de contagem regressiva com "BOO!"
     IEnumerator StartCountdown()
-{
-    // Garantir que o jogo fique pausado durante a contagem
-    Time.timeScale = 0f;
-    countdownText.gameObject.SetActive(true);  // Ativar o texto de contagem regressiva
-
-    for (int i = 3; i > 0; i--)
     {
-        // Verifica se o jogo está pausado, se sim, esconde o countdown e para a corrotina
-        if (isPaused)
+        // Garantir que o jogo fique pausado durante a contagem
+        Time.timeScale = 0f;
+        countdownText.gameObject.SetActive(true);  // Ativar o texto de contagem regressiva
+
+        for (int i = 3; i > 0; i--)
         {
-            countdownText.gameObject.SetActive(false);
-            yield break;  // Sai da corrotina
+            // Verifica se o jogo está pausado, se sim, esconde o countdown e para a corrotina
+            if (isPaused)
+            {
+                countdownText.gameObject.SetActive(false);
+                yield break;  // Sai da corrotina
+            }
+
+            countdownText.text = i.ToString();  // Mostrar a contagem regressiva
+            yield return new WaitForSecondsRealtime(1f);  // Esperar 1 segundo em tempo real
         }
 
-        countdownText.text = i.ToString();  // Mostrar a contagem regressiva
-        yield return new WaitForSecondsRealtime(1f);  // Esperar 1 segundo em tempo real
+        countdownText.text = "0";  // Mostrar "BOO!" no final
+        yield return new WaitForSecondsRealtime(1f);  // Esperar um segundo antes de começar o jogo
+
+        countdownText.gameObject.SetActive(false);  // Esconder o texto da contagem regressiva
+
+        // Agora que a contagem acabou, retomar o jogo
+        Time.timeScale = 1f;  // Começar o jogo
     }
-
-    countdownText.text = "BOO!";  // Mostrar "GO!" no final
-    yield return new WaitForSecondsRealtime(1f);  // Esperar um segundo antes de começar o jogo
-
-    countdownText.gameObject.SetActive(false);  // Esconder o texto da contagem regressiva
-
-    // Agora que a contagem acabou, retomar o jogo
-    Time.timeScale = 1f;  // Começar o jogo
-}
-
 }
