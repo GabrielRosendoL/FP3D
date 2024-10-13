@@ -19,8 +19,10 @@ public class CubeController : MonoBehaviour
     public AudioClip gameOverSound;  // Som de Game Over
     public GameObject tutorialPanel;  // Painel de Tutorial
     public TextMeshProUGUI countdownText;  // Texto da contagem regressiva
+    public GameObject pauseMenu;  // Painel de Pause Menu
 
     private bool isGameOver = false;
+    private bool isPaused = false; // Estado de pausa do jogo
     private int score = 0;  // Pontuação começa em 0
     private Vector3 savedVelocity;  // Salva a velocidade ao pausar
     private AudioSource audioSource;
@@ -41,8 +43,9 @@ public class CubeController : MonoBehaviour
         // Congela a rotação nos eixos X e Z para evitar que o cubo tombe para frente ou para os lados
         rb.constraints = RigidbodyConstraints.FreezeRotationX | RigidbodyConstraints.FreezeRotationZ;
 
-        // Esconder o painel de Game Over inicialmente
+        // Esconder o painel de Game Over e Pause Menu inicialmente
         gameOverPanel.SetActive(false);
+        pauseMenu.SetActive(false);
         countdownText.gameObject.SetActive(false);  // Esconder o texto da contagem no início
 
         restartButton.onClick.AddListener(RestartGame);
@@ -88,12 +91,29 @@ public class CubeController : MonoBehaviour
         {
             StopDash();
         }
+
+        // Toggle do menu de pausa com a tecla "Escape"
+        if (Input.GetKeyDown(KeyCode.Escape))
+        {
+            if (!isPaused)
+            {
+                PauseGame();
+            }
+            else
+            {
+                ResumeGame();
+            }
+        }
     }
 
     void MoveRight()
     {
-        float currentSpeed = Input.GetKey(KeyCode.Z) ? dashSpeed : moveSpeed;
-        rb.velocity = new Vector3(currentSpeed, rb.velocity.y, 0);
+        // Verifica se o Rigidbody NÃO é cinemático antes de ajustar a velocidade
+        if (!rb.isKinematic)
+        {
+            float currentSpeed = Input.GetKey(KeyCode.Z) ? dashSpeed : moveSpeed;
+            rb.velocity = new Vector3(currentSpeed, rb.velocity.y, 0);
+        }
     }
 
     void Fly()
@@ -173,13 +193,26 @@ public class CubeController : MonoBehaviour
     {
         savedVelocity = rb.velocity; // Salva a velocidade atual ao pausar
         rb.isKinematic = true; // Desativa a física enquanto pausado
+        Time.timeScale = 0f;  // Pausa o jogo
+        pauseMenu.SetActive(true);  // Ativar o painel de pausa
+        isPaused = true;
+
+        // Esconder a contagem regressiva ao pausar o jogo
+        countdownText.gameObject.SetActive(false);
     }
 
-    public void ResumeGame()
-    {
-        rb.isKinematic = false; // Reativa a física
-        rb.velocity = savedVelocity; // Restaura a velocidade ao retomar o jogo
-    }
+public void ResumeGame()
+{
+    rb.isKinematic = false; // Reativa a física
+    rb.velocity = savedVelocity; // Restaura a velocidade ao retomar o jogo
+    pauseMenu.SetActive(false);  // Desativar o painel de pausa
+    isPaused = false;
+
+    // Iniciar a contagem regressiva após retomar o jogo
+    StartCoroutine(StartCountdown());
+}
+
+
 
     // Método para resetar a cor original
     void ResetColor()
@@ -229,20 +262,31 @@ public class CubeController : MonoBehaviour
 
     // Corrotina de contagem regressiva
     IEnumerator StartCountdown()
-    {
-        tutorialPanel.SetActive(false);  // Esconder o painel de tutorial
-        countdownText.gameObject.SetActive(true);  // Ativar o texto de contagem regressiva
+{
+    // Garantir que o jogo fique pausado durante a contagem
+    Time.timeScale = 0f;
+    countdownText.gameObject.SetActive(true);  // Ativar o texto de contagem regressiva
 
-        for (int i = 3; i > 0; i--)
+    for (int i = 3; i > 0; i--)
+    {
+        // Verifica se o jogo está pausado, se sim, esconde o countdown e para a corrotina
+        if (isPaused)
         {
-            countdownText.text = i.ToString();  // Mostrar a contagem regressiva
-            yield return new WaitForSecondsRealtime(1f);  // Esperar 1 segundo em tempo real
+            countdownText.gameObject.SetActive(false);
+            yield break;  // Sai da corrotina
         }
 
-        countdownText.text = "GO!";  // Mostrar "GO!" no final
-        yield return new WaitForSecondsRealtime(1f);  // Esperar um segundo antes de começar o jogo
-
-        countdownText.gameObject.SetActive(false);  // Esconder o texto da contagem regressiva
-        Time.timeScale = 1;  // Começar o jogo
+        countdownText.text = i.ToString();  // Mostrar a contagem regressiva
+        yield return new WaitForSecondsRealtime(1f);  // Esperar 1 segundo em tempo real
     }
+
+    countdownText.text = "GO!";  // Mostrar "GO!" no final
+    yield return new WaitForSecondsRealtime(1f);  // Esperar um segundo antes de começar o jogo
+
+    countdownText.gameObject.SetActive(false);  // Esconder o texto da contagem regressiva
+
+    // Agora que a contagem acabou, retomar o jogo
+    Time.timeScale = 1f;  // Começar o jogo
+}
+
 }
