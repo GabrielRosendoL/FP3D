@@ -17,7 +17,7 @@ public class ObstacleSpawner : MonoBehaviour
     void Start()
     {
         // Definir a posição inicial para o primeiro obstáculo
-        nextXPosition = player.position.x + obstacleSpawnDistance;
+        nextXPosition = player.position.x + 25f + obstacleSpawnDistance;
 
         // Gerar os obstáculos iniciais
         for (int i = 0; i < initialObstacles; i++)
