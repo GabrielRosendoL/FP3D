@@ -75,9 +75,9 @@ public class CubeController : MonoBehaviour
     // Se o jogo acabou ou se o jogo estiver pausado, verifica se é necessário reiniciar
     if (isGameOver)
     {
-        if (Input.GetKeyDown(KeyCode.Space))
+        if (Input.GetKeyDown(KeyCode.Z))
         {
-            RestartGame();  // Pressionar a barra de espaço no painel de Game Over reinicia o jogo
+            RestartGame();  // Pressionar a tecla Z no painel de Game Over reinicia o jogo
         }
         return;  // Não continua processando o restante das ações quando o jogo acabou
     }
