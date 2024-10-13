@@ -49,7 +49,7 @@ public class CubeController : MonoBehaviour
     countdownText.gameObject.SetActive(false);
     
     // Certifique-se de que o texto da pontuação esteja visível
-    scoreText.text = "Score: " + score;
+    scoreText.text = "PONTUAÇÃO: " + score;
     
     restartButton.onClick.AddListener(RestartGame);
 
@@ -76,7 +76,7 @@ public class CubeController : MonoBehaviour
         if (isGameOver || Time.timeScale == 0f) return; // Adiciona verificação para pausa
 
         MoveRight();
-        rb.AddForce(Vector3.down * 70f);
+        rb.AddForce(Vector3.down * 140f); // Força da Gravidade
 
         if (Input.GetKeyDown(KeyCode.Space))
         {
@@ -154,7 +154,7 @@ public class CubeController : MonoBehaviour
         gameOverPanel.SetActive(true);
 
         // Atualizar a pontuação no painel
-        scoreText.text = "Score: " + score;
+        scoreText.text = "PONTUAÇÃO: " + score;
 
         // Tocar o som de Game Over
         if (gameOverSound != null && audioSource != null)
@@ -179,7 +179,7 @@ public class CubeController : MonoBehaviour
 public void AddScore()
 {
     score++;  // Incrementa a pontuação
-    scoreTextInGame.text = "Pontuação: " + score;  // Atualiza o texto da pontuação em tempo real
+    scoreTextInGame.text = "PONTUAÇÃO: " + score;  // Atualiza o texto da pontuação em tempo real
 }
 
 
@@ -284,7 +284,7 @@ public void ResumeGame()
         yield return new WaitForSecondsRealtime(1f);  // Esperar 1 segundo em tempo real
     }
 
-    countdownText.text = "GO!";  // Mostrar "GO!" no final
+    countdownText.text = "BOO!";  // Mostrar "GO!" no final
     yield return new WaitForSecondsRealtime(1f);  // Esperar um segundo antes de começar o jogo
 
     countdownText.gameObject.SetActive(false);  // Esconder o texto da contagem regressiva
