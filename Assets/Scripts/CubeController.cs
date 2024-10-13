@@ -49,7 +49,7 @@ public class CubeController : MonoBehaviour
         countdownText.gameObject.SetActive(false);
 
         // Certifique-se de que o texto da pontuação esteja visível
-        scoreText.text = "PONTUAÇÃO: " + score;
+        scoreText.text = "SCORE: " + score;
 
         restartButton.onClick.AddListener(RestartGame);
 
@@ -136,14 +136,16 @@ public class CubeController : MonoBehaviour
     }
 
     private void OnCollisionEnter(Collision collision)
+{
+    // Verifica se a tag do objeto colidido é "Ground", "Obstacle" ou "Teto"
+    if (collision.gameObject.CompareTag("Ground") || 
+        collision.gameObject.CompareTag("Obstacle") || 
+        collision.gameObject.CompareTag("Teto"))
     {
-        if (collision.gameObject.CompareTag("Ground") || 
-            collision.gameObject.CompareTag("Obstacle") || 
-            collision.gameObject.CompareTag("Teto"))
-        {
-            GameOver();
-        }
+        GameOver();  // Chama o método de Game Over
     }
+}
+
 
     void GameOver()
     {
@@ -153,7 +155,7 @@ public class CubeController : MonoBehaviour
         gameOverPanel.SetActive(true);
 
         // Atualizar a pontuação no painel
-        scoreText.text = "PONTUAÇÃO: " + score;
+        scoreText.text = "SCORE: " + score;
 
         // Tocar o som de Game Over
         if (gameOverSound != null && audioSource != null)
@@ -177,7 +179,7 @@ public class CubeController : MonoBehaviour
     public void AddScore()
     {
         score++;  // Incrementa a pontuação
-        scoreTextInGame.text = "PONTUAÇÃO: " + score;  // Atualiza o texto da pontuação em tempo real
+        scoreTextInGame.text = "SCORE: " + score;  // Atualiza o texto da pontuação em tempo real
     }
 
     // Detecta quando o cubo passa pela linha (trigger)
@@ -293,7 +295,7 @@ IEnumerator GlowDuringDash()
             yield return new WaitForSecondsRealtime(1f);  // Esperar 1 segundo em tempo real
         }
 
-        countdownText.text = "0";  // Mostrar "BOO!" no final
+        countdownText.text = "GO!";  // Mostrar "BOO!" no final
         yield return new WaitForSecondsRealtime(1f);  // Esperar um segundo antes de começar o jogo
 
         countdownText.gameObject.SetActive(false);  // Esconder o texto da contagem regressiva

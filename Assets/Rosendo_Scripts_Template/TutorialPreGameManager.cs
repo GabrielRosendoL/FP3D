@@ -52,7 +52,7 @@ public class TutorialPreGameManager : MonoBehaviour
         }
 
         // Após a contagem regressiva, mostrar "GO!"
-        countdownText.text = "0";
+        countdownText.text = "GO!";
 
         // Esperar 1 segundo antes de iniciar o jogo
         yield return new WaitForSecondsRealtime(1f);
