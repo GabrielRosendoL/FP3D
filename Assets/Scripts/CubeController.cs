@@ -74,9 +74,9 @@ public class CubeController : MonoBehaviour
         // Se o jogo acabou ou se o jogo estiver pausado, verifica se é necessário reiniciar
         if (isGameOver)
         {
-            if (Input.GetKeyDown(KeyCode.Z) || IsScreenTouched())  // Tecla Z ou toque reinicia o jogo
+            if (Input.GetKeyDown(KeyCode.Z))
             {
-                RestartGame();
+                RestartGame();  // Pressionar a tecla Z no painel de Game Over reinicia o jogo
             }
             return;  // Não continua processando o restante das ações quando o jogo acabou
         }
@@ -86,19 +86,18 @@ public class CubeController : MonoBehaviour
         MoveRight();
         rb.AddForce(Vector3.down * 450f); // Força da Gravidade
 
-        // Verifica se a barra de espaço ou a tela foi tocada para voar
-        if (Input.GetKeyDown(KeyCode.Space) || IsScreenTouched())
+        // Teclado
+        if (Input.GetKeyDown(KeyCode.Space))
         {
-            Fly();  // Se o jogo não acabou, a barra de espaço ou toque faz o cubo voar
+            Fly();  // Se o jogo não acabou, a barra de espaço faz o cubo voar
         }
 
-        // Verifica se a tecla Z foi pressionada ou a tela foi tocada com dois dedos para iniciar o dash
-        if (Input.GetKeyDown(KeyCode.Z) || IsDoubleTouch())
+        if (Input.GetKeyDown(KeyCode.Z))
         {
             StartDash();
         }
 
-        if (Input.GetKeyUp(KeyCode.Z) || Input.touchCount == 0)
+        if (Input.GetKeyUp(KeyCode.Z))
         {
             StopDash();
         }
@@ -113,6 +112,47 @@ public class CubeController : MonoBehaviour
             else
             {
                 ResumeGame();
+            }
+        }
+
+        // Input de toque na tela
+        DetectTouchInput();
+    }
+
+    void DetectTouchInput()
+    {
+        if (Input.touchCount > 0)
+        {
+            Touch touch = Input.GetTouch(0);
+
+            // Toque único para pulo (simula barra de espaço)
+            if (touch.phase == TouchPhase.Began)
+            {
+                Fly();
+            }
+
+            // Toque de dois dedos para dash (simula a tecla Z)
+            if (Input.touchCount == 2)
+            {
+                StartDash();
+            }
+
+            if (Input.touchCount < 2 && isDashing)
+            {
+                StopDash();
+            }
+
+            // Toque de três dedos para pausa (simula a tecla Escape)
+            if (Input.touchCount == 3)
+            {
+                if (!isPaused)
+                {
+                    PauseGame();
+                }
+                else
+                {
+                    ResumeGame();
+                }
             }
         }
     }
@@ -286,7 +326,7 @@ public class CubeController : MonoBehaviour
         tutorialPanel.SetActive(true);
     }
 
-    // Corrotina de contagem regressiva com "GO!"
+    // Corrotina de contagem regressiva com "BOO!"
     IEnumerator StartCountdown()
     {
         // Garantir que o jogo fique pausado durante a contagem
@@ -306,24 +346,12 @@ public class CubeController : MonoBehaviour
             yield return new WaitForSecondsRealtime(1f);  // Esperar 1 segundo em tempo real
         }
 
-        countdownText.text = "GO!";  // Mostrar "GO!" no final
+        countdownText.text = "GO!";  // Mostrar "BOO!" no final
         yield return new WaitForSecondsRealtime(1f);  // Esperar um segundo antes de começar o jogo
 
         countdownText.gameObject.SetActive(false);  // Esconder o texto da contagem regressiva
 
         // Agora que a contagem acabou, retomar o jogo
         Time.timeScale = 1f;  // Começar o jogo
-    }
-
-    // Verifica se a tela foi tocada (um toque único)
-    bool IsScreenTouched()
-    {
-        return Input.touchCount > 0 && Input.GetTouch(0).phase == TouchPhase.Began;
-    }
-
-    // Verifica se dois dedos estão tocando a tela ao mesmo tempo (para o dash)
-    bool IsDoubleTouch()
-    {
-        return Input.touchCount == 2 && Input.GetTouch(1).phase == TouchPhase.Began;
     }
 }
